@@ -287,14 +287,14 @@
     const VERSION_PERIOD_DAYS = 42;
 
     // Each event has one or more occurrences per 42-day version cycle.
-    // offsetDays = days from the version Phase 1 start; hour = server-local hour.
+    // offsetDays = days from version Phase 1 start; hour = server-local hour unless utc: true.
     const EVENTS = {
       banner: { occurrences: [
-        { offsetDays: 0,  hour: 11 },                     // version start (Phase 1 banners)
-        { offsetDays: 20, hour: 18 },                     // mid-version Phase 2 banner swap
+        { offsetDays: 0,  hour: 3,  utc: true },          // Phase 1: simultaneous at 03:00 UTC
+        { offsetDays: 20, hour: 18 },                     // Phase 2: 18:00 server local time
       ]},
       stygian: { occurrences: [
-        { offsetDays: 7,  hour: 10 },                     // Stygian Onslaught begins
+        { offsetDays: 7,  hour: 10 },                     // Stygian Onslaught: 10:00 server local time
       ]},
     };
 
@@ -353,7 +353,7 @@
       let earliest = null;
       for (const occ of event.occurrences) {
         const firstYmd = addDays(VERSION_ANCHOR_DATE, occ.offsetDays);
-        const firstOcc = new Date(`${firstYmd}T${pad(occ.hour)}:00:00${tz}`);
+        const firstOcc = new Date(`${firstYmd}T${pad(occ.hour)}:00:00${occ.utc ? '+00:00' : tz}`);
         const diff = now.getTime() - firstOcc.getTime();
         const cycles = diff < 0 ? 0 : Math.floor(diff / periodMs) + 1;
         const candidate = new Date(firstOcc.getTime() + cycles * periodMs);
