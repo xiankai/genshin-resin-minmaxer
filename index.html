@@ -8,14 +8,14 @@
 
   <style>
     :root {
-      --bg: #1a1c2e;
-      --card: #252842;
-      --text: #e8e4d4;
-      --accent: #c0a36c;
-      --accent-bright: #e8d4a0;
-      --muted: #8a8a9e;
-      --border: #3a3d5a;
-      --danger: #d68a85;
+      --bg: #f5efe0;
+      --card: #ede3ce;
+      --text: #2d2416;
+      --accent: #7a5015;
+      --accent-bright: #5c3a0a;
+      --muted: #6b5c43;
+      --border: #c8b898;
+      --danger: #8c2020;
     }
     * { box-sizing: border-box; }
     body {
@@ -76,13 +76,13 @@
       color: var(--text);
       font-size: 1rem;
       font-family: inherit;
-      color-scheme: dark;
+      color-scheme: light;
     }
-    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
     select {
       appearance: none;
       -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238a8a9e'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b5c43'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 0.6rem center;
       background-size: 1.2em;
@@ -124,7 +124,7 @@
       transition: border-color 0.12s, color 0.12s, background 0.12s;
     }
     .event-button:hover { border-color: var(--accent); color: var(--accent-bright); }
-    .event-button:focus { outline: none; border-color: var(--accent); }
+    .event-button:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
     .event-button.active {
       background: var(--accent);
       border-color: var(--accent-bright);
@@ -149,6 +149,7 @@
       user-select: none;
     }
     .info-icon:hover { color: var(--accent-bright); border-color: var(--accent); }
+    .info-icon:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
     .hint {
       font-size: 0.75rem;
       color: var(--muted);
@@ -194,7 +195,8 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--muted);
-      margin-bottom: 0.75rem;
+      margin: 0 0 0.75rem;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -204,6 +206,7 @@
     <p class="subtitle">Helper to maximize saving your resin for when it matters.</p>
 
     <div class="card">
+      <h2 class="section-title">Current Status</h2>
       <div class="field-row">
         <div class="field">
           <label for="current-resin">Current Resin (0–200)</label>
@@ -228,8 +231,9 @@
         <div class="hint" id="tz-hint"></div>
         <div class="presets-header">
           <span class="presets-label">Presets</span>
-          <span class="info-icon" tabindex="0"
-                title="Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule.">i</span>
+          <span class="info-icon" tabindex="0" role="img"
+                aria-label="Note: Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule."
+                title="Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule." aria-hidden="false">i</span>
         </div>
         <div class="event-buttons">
           <button type="button" class="event-button" data-event="banner">Next Banner Date</button>
@@ -237,11 +241,11 @@
         </div>
         <div class="event-hint" id="event-hint"></div>
       </div>
-      <div id="error" class="error" hidden></div>
+      <div id="error" class="error" role="alert" aria-live="assertive" hidden></div>
     </div>
 
-    <div class="card">
-      <div class="section-title">At that time</div>
+    <div class="card" aria-live="polite" aria-atomic="true">
+      <h2 class="section-title">At that time</h2>
       <div class="result-row">
         <span class="result-label">Condensed Resin</span>
         <span class="result-value" id="result-condensed">—</span>
@@ -516,6 +520,10 @@
 
     for (const btn of eventButtons) {
       btn.addEventListener('click', () => applyEvent(btn.dataset.event));
+    }
+
+    for (const el of [inputCurrent, inputCurrentCondensed]) {
+      el.addEventListener('focus', () => el.select());
     }
 
     inputCurrent.addEventListener('input', calculate);
