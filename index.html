@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genshin Resin Calculator</title>
+  <title>Genshin Resin Minmaxer</title>
   <meta name="description" content="Helper to maximize saving your resin for when it matters.">
 
   <style>
@@ -202,11 +202,19 @@
 </head>
 <body>
   <div class="container">
-    <h1>Genshin Resin Calculator</h1>
-    <p class="subtitle">Helper to maximize saving your resin for when it matters.</p>
+    <h1>Genshin Resin Minmaxer</h1>
+    <p class="subtitle">
+      You may want to hoard as much resin as possible before a character's release so that you can spend it on a new boss
+      <br>
+      Or you may want to take advantage of Stygian Onslaught's bonus artifacts during the first 10 days.
+      <br>
+      In both cases, this minmaxer helps you by taking your current resin and showing you the projected total resin at the time of the banner / stygian onslaught.
+      <br>
+      That way you can decide when you should stop spending resin and start crafting condensed resin to hoard instead. (ie. no overflow resin)
+    </p>
 
     <div class="card">
-      <h2 class="section-title">Current Status</h2>
+      <h2 class="section-title">Current Stockpile</h2>
       <div class="field-row">
         <div class="field">
           <label for="current-resin">Current Resin (0–200)</label>
@@ -255,7 +263,7 @@
         <span class="result-value" id="result-resin">—</span>
       </div>
       <div class="result-row">
-        <span class="result-label">Wasted</span>
+        <span class="result-label">Overflow</span>
         <span class="result-value muted" id="result-wasted">—</span>
       </div>
       <div class="result-row">
@@ -265,7 +273,7 @@
     </div>
 
     <footer>
-      Made by <a href="https://github.com/xiankai" target="_blank" rel="noopener">@xiankai</a>. Any issues? Raise an issue <a href="https://github.com/xiankai/genshin-resin-calculator/issues" target="_blank" rel="noopener">here</a>.
+      Any questions or ideas? Raise an issue  <a href="https://github.com/xiankai/genshin-resin-minmaxer/issues" target="_blank" rel="noopener">here</a>.
     </footer>
   </div>
 
