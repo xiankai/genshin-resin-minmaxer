@@ -1,560 +1,789 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genshin Resin Minmaxer</title>
-  <meta name="description" content="Helper to maximize saving your resin for when it matters.">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Genshin Resin Minmaxer</title>
+    <meta
+      name="description"
+      content="Helper to maximize saving your resin for when it matters."
+    />
 
-  <style>
-    :root {
-      --bg: #f5efe0;
-      --card: #ede3ce;
-      --text: #2d2416;
-      --accent: #7a5015;
-      --accent-bright: #5c3a0a;
-      --muted: #6b5c43;
-      --border: #c8b898;
-      --danger: #8c2020;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 2rem 1rem;
-    }
-    .container { max-width: 480px; width: 100%; }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0 0 0.4rem;
-      color: var(--accent-bright);
-      text-align: center;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-    .subtitle {
-      margin: 0 0 1.5rem;
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.9rem;
-    }
-    footer {
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-    footer a:hover { color: var(--accent-bright); text-decoration: underline; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-    }
-    input, select {
-      width: 100%;
-      padding: 0.6rem 0.75rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 1rem;
-      font-family: inherit;
-      color-scheme: light;
-    }
-    input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b5c43'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.6rem center;
-      background-size: 1.2em;
-      padding-right: 2.2rem;
-    }
-    option { color: var(--text); background: var(--card); font-weight: normal; }
-    .field + .field { margin-top: 1rem; }
-    .field-row { display: flex; gap: 0.75rem; }
-    .field-row .field { flex: 1 1 0; min-width: 0; margin-top: 0; }
-    .field-row + .field { margin-top: 1rem; }
-    .presets-header {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-top: 0.9rem;
-      margin-bottom: 0.4rem;
-    }
-    .presets-label {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .event-buttons {
-      display: flex;
-      gap: 0.4rem;
-    }
-    .event-button {
-      flex: 1 1 0;
-      min-width: 0;
-      padding: 0.55rem 0.4rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 0.85rem;
-      font-family: inherit;
-      cursor: pointer;
-      text-align: center;
-      line-height: 1.2;
-      transition: border-color 0.12s, color 0.12s, background 0.12s;
-    }
-    .event-button:hover { border-color: var(--accent); color: var(--accent-bright); }
-    .event-button:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-    .event-button.active {
-      background: var(--accent);
-      border-color: var(--accent-bright);
-      color: var(--bg);
-      font-weight: 600;
-    }
-    .info-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.4rem;
-      height: 1.4rem;
-      border-radius: 50%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.8rem;
-      font-style: italic;
-      font-family: Georgia, serif;
-      cursor: help;
-      flex-shrink: 0;
-      user-select: none;
-    }
-    .info-icon:hover { color: var(--accent-bright); border-color: var(--accent); }
-    .info-icon:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-    .hint {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 0.3rem;
-    }
-    .event-hint {
-      margin-top: 0.6rem;
-      padding: 0.6rem 0.75rem;
-      background: var(--bg);
-      border: 1px solid var(--accent);
-      border-radius: 6px;
-      color: var(--accent-bright);
-      font-size: 1rem;
-      font-weight: 600;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-      line-height: 1.3;
-    }
-    .event-hint:empty { display: none; }
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 0.6rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .result-row:last-child { border-bottom: none; }
-    .result-label { color: var(--muted); font-size: 0.9rem; }
-    .result-value {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--accent-bright);
-      font-variant-numeric: tabular-nums;
-    }
-    .result-value.muted { color: var(--muted); font-weight: 400; font-size: 1rem; }
-    .error {
-      color: var(--danger);
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-    .section-title {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      margin: 0 0 0.75rem;
-      font-weight: 500;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Genshin Resin Minmaxer</h1>
-    <p class="subtitle">
-      You may want to hoard as much resin as possible before a character's release so that you can spend it on a new boss
-      <br>
-      Or you may want to take advantage of Stygian Onslaught's bonus artifacts during the first 10 days.
-      <br>
-      In both cases, this minmaxer helps you by taking your current resin and showing you the projected total resin at the time of the banner / stygian onslaught.
-      <br>
-      That way you can decide when you should stop spending resin and start crafting condensed resin to hoard instead. (ie. no overflow resin)
-    </p>
+    <style>
+      :root {
+        --bg: #f5efe0;
+        --card: #ede3ce;
+        --text: #2d2416;
+        --accent: #7a5015;
+        --accent-bright: #5c3a0a;
+        --muted: #6b5c43;
+        --border: #c8b898;
+        --danger: #8c2020;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 2rem 1rem;
+      }
+      .container {
+        max-width: 480px;
+        width: 100%;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 0.4rem;
+        color: var(--accent-bright);
+        text-align: center;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+      .intro-qa {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1.6;
+      }
+      .intro-qa dt {
+        font-weight: 600;
+        color: var(--accent);
+        margin-top: 0.6rem;
+      }
+      .intro-qa dt:first-child {
+        margin-top: 0;
+      }
+      .intro-qa dd {
+        margin: 0;
+      }
+      .intro-qa ul {
+        margin: 0.2rem 0 0;
+        padding-left: 1.2rem;
+      }
+      footer {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      footer a:hover {
+        color: var(--accent-bright);
+        text-decoration: underline;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 0.4rem;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 1rem;
+        font-family: inherit;
+        color-scheme: light;
+      }
+      input:focus,
+      select:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        border-color: var(--accent);
+      }
+      select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b5c43'%3E%3Cpath d='M5.5 7.5l4.5 4.5 4.5-4.5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.6rem center;
+        background-size: 1.2em;
+        padding-right: 2.2rem;
+      }
+      option {
+        color: var(--text);
+        background: var(--card);
+        font-weight: normal;
+      }
+      .field + .field {
+        margin-top: 1rem;
+      }
+      .field-row {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .field-row .field {
+        flex: 1 1 0;
+        min-width: 0;
+        margin-top: 0;
+      }
+      .field-row + .field {
+        margin-top: 1rem;
+      }
+      .presets-header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.9rem;
+        margin-bottom: 0.4rem;
+      }
+      .presets-label {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .event-buttons {
+        display: flex;
+        gap: 0.4rem;
+      }
+      .event-button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0.55rem 0.4rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 0.85rem;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: center;
+        line-height: 1.2;
+        transition:
+          border-color 0.12s,
+          color 0.12s,
+          background 0.12s;
+      }
+      .event-button:hover {
+        border-color: var(--accent);
+        color: var(--accent-bright);
+      }
+      .event-button:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        border-color: var(--accent);
+      }
+      .event-button.active {
+        background: var(--accent);
+        border-color: var(--accent-bright);
+        color: var(--bg);
+        font-weight: 600;
+      }
+      .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-style: italic;
+        font-family: Georgia, serif;
+        cursor: help;
+        flex-shrink: 0;
+        user-select: none;
+      }
+      .info-icon:hover {
+        color: var(--accent-bright);
+        border-color: var(--accent);
+      }
+      .info-icon:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+      .hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 0.3rem;
+      }
+      .event-hint {
+        margin-top: 0.6rem;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg);
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        color: var(--accent-bright);
+        font-size: 1rem;
+        font-weight: 600;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.3;
+      }
+      .event-hint:empty {
+        display: none;
+      }
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .result-row:last-child {
+        border-bottom: none;
+      }
+      .result-label {
+        color: var(--muted);
+        font-size: 0.9rem;
+        min-width: 0;
+      }
+      .result-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--accent-bright);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding-left: 0.5rem;
+      }
+      .result-value.muted {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 1rem;
+      }
+      .result-block {
+        border-bottom: 1px solid var(--border);
+        padding: 0.6rem 0 0.4rem;
+      }
+      .result-block:last-child {
+        border-bottom: none;
+      }
+      .result-block .result-row {
+        border-bottom: none;
+        padding: 0;
+      }
+      .result-block .hint {
+        margin-top: 0.1rem;
+      }
+      .error {
+        color: var(--danger);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+      .section-title {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin: 0 0 0.75rem;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Genshin Resin Minmaxer</h1>
+      <dl class="intro-qa">
+        <dt>What is this?</dt>
+        <dd>A tool to minmax your resin so it's ready when it counts.</dd>
+        <dt>Why hoard?</dt>
+        <dd>
+          New character banners introduce a new boss to farm. Stygian Onslaught
+          gives bonus artifacts for its first 10 days.
+        </dd>
+        <dt>What does it show?</dt>
+        <dd>
+          <ul>
+            <li>Condensed resin — when to stop spending and start crafting</li>
+            <li>
+              Transient Resin — when to save from Realm Depot and Imaginarium
+              Theater
+            </li>
+          </ul>
+        </dd>
+      </dl>
 
-    <div class="card">
-      <h2 class="section-title">Current Stockpile</h2>
-      <div class="field-row">
-        <div class="field">
-          <label for="current-resin">Current Resin (0–200)</label>
-          <input type="number" id="current-resin" min="0" max="200" value="0" step="1" inputmode="numeric">
+      <div class="card">
+        <h2 class="section-title">Current Stockpile</h2>
+        <div class="field-row">
+          <div class="field">
+            <label for="current-resin">Current Resin (0–200)</label>
+            <input
+              type="number"
+              id="current-resin"
+              min="0"
+              max="200"
+              value="0"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
+          <div class="field">
+            <label for="current-condensed">Condensed (0–5)</label>
+            <input
+              type="number"
+              id="current-condensed"
+              min="0"
+              max="5"
+              value="0"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
         </div>
         <div class="field">
-          <label for="current-condensed">Condensed (0–5)</label>
-          <input type="number" id="current-condensed" min="0" max="5" value="0" step="1" inputmode="numeric">
+          <label for="server-select">Server Region</label>
+          <select id="server-select">
+            <option value="asia">Asia (UTC+8)</option>
+            <option value="europe">Europe (UTC+1)</option>
+            <option value="america">America (UTC-5)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="future-date">Future Date &amp; Time</label>
+          <input type="datetime-local" id="future-date" />
+          <div class="hint" id="tz-hint"></div>
+          <div class="presets-header">
+            <span class="presets-label">Presets</span>
+            <span
+              class="info-icon"
+              tabindex="0"
+              role="img"
+              aria-label="Note: Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule."
+              title="Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule."
+              aria-hidden="false"
+              >i</span
+            >
+          </div>
+          <div class="event-buttons">
+            <button type="button" class="event-button" data-event="banner">
+              Next Banner Date
+            </button>
+            <button type="button" class="event-button" data-event="stygian">
+              Next Stygian Onslaught
+            </button>
+          </div>
+          <div class="event-hint" id="event-hint"></div>
+        </div>
+        <div
+          id="error"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          hidden
+        ></div>
+      </div>
+
+      <div class="card" aria-live="polite" aria-atomic="true">
+        <h2 class="section-title">At that time</h2>
+        <div class="result-row">
+          <span class="result-label">Condensed Resin</span>
+          <span class="result-value" id="result-condensed">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Leftover</span>
+          <span class="result-value" id="result-resin">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Overflow</span>
+          <span class="result-value muted" id="result-wasted">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Time from now</span>
+          <span class="result-value muted" id="result-elapsed">—</span>
+        </div>
+        <div class="result-block">
+          <div class="result-row">
+            <span class="result-label"
+              >Realm Depot: Save Transient Resin from</span
+            >
+            <span class="result-value muted" id="result-hoard-realm">—</span>
+          </div>
+          <div class="hint">Lasts for 2 weeks from this week's Monday</div>
+        </div>
+        <div class="result-block">
+          <div class="result-row">
+            <span class="result-label"
+              >Imaginarium Theater: Claim Transient Resin from</span
+            >
+            <span class="result-value muted" id="result-hoard-it">—</span>
+          </div>
+          <div class="hint">Lasts for 1 week from this week's Monday</div>
         </div>
       </div>
-      <div class="field">
-        <label for="server-select">Server Region</label>
-        <select id="server-select">
-          <option value="asia">Asia (UTC+8)</option>
-          <option value="europe">Europe (UTC+1)</option>
-          <option value="america">America (UTC-5)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="future-date">Future Date &amp; Time</label>
-        <input type="datetime-local" id="future-date">
-        <div class="hint" id="tz-hint"></div>
-        <div class="presets-header">
-          <span class="presets-label">Presets</span>
-          <span class="info-icon" tabindex="0" role="img"
-                aria-label="Note: Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule."
-                title="Preselected dates are extrapolated from Genshin's past release patterns (a 42-day version cycle since 3.3). They are predictions, not official announcements, and may shift if miHoYo changes the schedule." aria-hidden="false">i</span>
-        </div>
-        <div class="event-buttons">
-          <button type="button" class="event-button" data-event="banner">Next Banner Date</button>
-          <button type="button" class="event-button" data-event="stygian">Next Stygian Onslaught</button>
-        </div>
-        <div class="event-hint" id="event-hint"></div>
-      </div>
-      <div id="error" class="error" role="alert" aria-live="assertive" hidden></div>
+
+      <footer>
+        Any questions or ideas? Raise an issue
+        <a
+          href="https://github.com/xiankai/genshin-resin-minmaxer/issues"
+          target="_blank"
+          rel="noopener"
+          >here</a
+        >.
+      </footer>
     </div>
 
-    <div class="card" aria-live="polite" aria-atomic="true">
-      <h2 class="section-title">At that time</h2>
-      <div class="result-row">
-        <span class="result-label">Condensed Resin</span>
-        <span class="result-value" id="result-condensed">—</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Leftover</span>
-        <span class="result-value" id="result-resin">—</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Overflow</span>
-        <span class="result-value muted" id="result-wasted">—</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Time from now</span>
-        <span class="result-value muted" id="result-elapsed">—</span>
-      </div>
-    </div>
+    <script>
+      const MIN_PER_RESIN = 8;
+      const RESIN_CAP = 200;
+      const RESIN_PER_CONDENSED = 60;
+      const MAX_CONDENSED = 5;
 
-    <footer>
-      Any questions or ideas? Raise an issue  <a href="https://github.com/xiankai/genshin-resin-minmaxer/issues" target="_blank" rel="noopener">here</a>.
-    </footer>
-  </div>
+      const SERVERS = {
+        asia: { label: "Asia", offset: 8 },
+        europe: { label: "Europe", offset: 1 },
+        america: { label: "America", offset: -5 },
+      };
 
-  <script>
-    const MIN_PER_RESIN = 8;
-    const RESIN_CAP = 200;
-    const RESIN_PER_CONDENSED = 60;
-    const MAX_CONDENSED = 5;
+      // Anchor: Luna I version Phase 1 start, server-local date.
+      // Every Genshin version since 3.3 has been a 42-day cycle starting on Wednesday.
+      const VERSION_ANCHOR_DATE = "2025-09-10";
+      const VERSION_PERIOD_DAYS = 42;
 
-    const SERVERS = {
-      asia:    { label: 'Asia',    offset:  8 },
-      europe:  { label: 'Europe',  offset:  1 },
-      america: { label: 'America', offset: -5 },
-    };
+      // Each event has one or more occurrences per 42-day version cycle.
+      // offsetDays = days from version Phase 1 start; hour = server-local hour unless utc: true.
+      const EVENTS = {
+        banner: {
+          occurrences: [
+            { offsetDays: 0, hour: 3, utc: true }, // Phase 1: simultaneous at 03:00 UTC
+            { offsetDays: 20, hour: 18 }, // Phase 2: 18:00 server local time
+          ],
+        },
+        stygian: {
+          occurrences: [
+            { offsetDays: 7, hour: 10 }, // Stygian Onslaught: 10:00 server local time
+          ],
+        },
+      };
 
-    // Anchor: Luna I version Phase 1 start, server-local date.
-    // Every Genshin version since 3.3 has been a 42-day cycle starting on Wednesday.
-    const VERSION_ANCHOR_DATE = '2025-09-10';
-    const VERSION_PERIOD_DAYS = 42;
+      const COOKIE_SERVER = "gscServer";
+      const COOKIE_EVENT = "gscEvent";
 
-    // Each event has one or more occurrences per 42-day version cycle.
-    // offsetDays = days from version Phase 1 start; hour = server-local hour unless utc: true.
-    const EVENTS = {
-      banner: { occurrences: [
-        { offsetDays: 0,  hour: 3,  utc: true },          // Phase 1: simultaneous at 03:00 UTC
-        { offsetDays: 20, hour: 18 },                     // Phase 2: 18:00 server local time
-      ]},
-      stygian: { occurrences: [
-        { offsetDays: 7,  hour: 10 },                     // Stygian Onslaught: 10:00 server local time
-      ]},
-    };
+      const inputCurrent = document.getElementById("current-resin");
+      const inputCurrentCondensed =
+        document.getElementById("current-condensed");
+      const inputFuture = document.getElementById("future-date");
+      const selectServer = document.getElementById("server-select");
+      const tzHint = document.getElementById("tz-hint");
+      const eventHint = document.getElementById("event-hint");
+      const errorEl = document.getElementById("error");
+      const resResin = document.getElementById("result-resin");
+      const resCondensed = document.getElementById("result-condensed");
+      const resWasted = document.getElementById("result-wasted");
+      const resElapsed = document.getElementById("result-elapsed");
+      const resHoardRealm = document.getElementById("result-hoard-realm");
+      const resHoardIt = document.getElementById("result-hoard-it");
+      const eventButtons = Array.from(
+        document.querySelectorAll(".event-button"),
+      );
 
-    const COOKIE_SERVER = 'gscServer';
-    const COOKIE_EVENT = 'gscEvent';
-
-    const inputCurrent = document.getElementById('current-resin');
-    const inputCurrentCondensed = document.getElementById('current-condensed');
-    const inputFuture = document.getElementById('future-date');
-    const selectServer = document.getElementById('server-select');
-    const tzHint = document.getElementById('tz-hint');
-    const eventHint = document.getElementById('event-hint');
-    const errorEl = document.getElementById('error');
-    const resResin = document.getElementById('result-resin');
-    const resCondensed = document.getElementById('result-condensed');
-    const resWasted = document.getElementById('result-wasted');
-    const resElapsed = document.getElementById('result-elapsed');
-    const eventButtons = Array.from(document.querySelectorAll('.event-button'));
-
-    function pad(n) { return String(n).padStart(2, '0'); }
-
-    function toLocalDatetimeValue(date) {
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    }
-
-    function formatElapsed(minutes) {
-      const total = Math.round(minutes);
-      if (total < 1) return 'less than a minute';
-      const days = Math.floor(total / 1440);
-      const hours = Math.floor((total % 1440) / 60);
-      const mins = total % 60;
-      const parts = [];
-      if (days) parts.push(`${days}d`);
-      if (hours) parts.push(`${hours}h`);
-      if (mins) parts.push(`${mins}m`);
-      return parts.join(' ');
-    }
-
-    function tzSuffix(offset) {
-      const sign = offset >= 0 ? '+' : '-';
-      return `${sign}${pad(Math.abs(offset))}:00`;
-    }
-
-    function addDays(yyyyMmDd, days) {
-      const [y, m, d] = yyyyMmDd.split('-').map(Number);
-      const dt = new Date(Date.UTC(y, m - 1, d));
-      dt.setUTCDate(dt.getUTCDate() + days);
-      return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
-    }
-
-    function nextEventDate(eventKey, server, now = new Date()) {
-      const event = EVENTS[eventKey];
-      const offset = SERVERS[server].offset;
-      const tz = tzSuffix(offset);
-      const periodMs = VERSION_PERIOD_DAYS * 86400000;
-      let earliest = null;
-      for (const occ of event.occurrences) {
-        const firstYmd = addDays(VERSION_ANCHOR_DATE, occ.offsetDays);
-        const firstOcc = new Date(`${firstYmd}T${pad(occ.hour)}:00:00${occ.utc ? '+00:00' : tz}`);
-        const diff = now.getTime() - firstOcc.getTime();
-        const cycles = diff < 0 ? 0 : Math.floor(diff / periodMs) + 1;
-        const candidate = new Date(firstOcc.getTime() + cycles * periodMs);
-        if (earliest === null || candidate < earliest) earliest = candidate;
+      function pad(n) {
+        return String(n).padStart(2, "0");
       }
-      return earliest;
-    }
 
-    function formatEventHint(date, server) {
-      const offset = SERVERS[server].offset;
-      const serverDate = new Date(date.getTime() + offset * 3600000);
-      const ymd = `${serverDate.getUTCFullYear()}-${pad(serverDate.getUTCMonth() + 1)}-${pad(serverDate.getUTCDate())}`;
-      const hm = `${pad(serverDate.getUTCHours())}:${pad(serverDate.getUTCMinutes())}`;
-      return `${ymd} ${hm} ${SERVERS[server].label} (UTC${offset >= 0 ? '+' : ''}${offset})`;
-    }
-
-    function detectClosestServer() {
-      const browserOffsetHr = -new Date().getTimezoneOffset() / 60;
-      let closest = 'asia', minDiff = Infinity;
-      for (const [k, v] of Object.entries(SERVERS)) {
-        const d = Math.abs(v.offset - browserOffsetHr);
-        if (d < minDiff) { minDiff = d; closest = k; }
+      // Returns the Monday (in local time) that is the earliest safe week to obtain a
+      // Transient Resin so it doesn't expire before `target`. `maxDays` is the validity
+      // window: 14 for Realm Depot (2 weeks from this week's Monday), 7 for IT (1 week).
+      function transientHoardFrom(target, maxDays) {
+        const threshold = new Date(target.getTime() - maxDays * 86400000);
+        // Round up to the nearest Monday (getDay: 0=Sun, 1=Mon … 6=Sat)
+        const day = threshold.getDay();
+        const daysToMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+        const monday = new Date(threshold.getTime() + daysToMonday * 86400000);
+        monday.setHours(0, 0, 0, 0);
+        return monday;
       }
-      return closest;
-    }
 
-    function getCookie(name) {
-      const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
-      return m ? decodeURIComponent(m[1]) : null;
-    }
+      function formatHoardDate(monday) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        if (monday <= now) return "Now";
+        return `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+      }
 
-    function setCookie(name, value) {
-      const exp = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
-    }
+      function toLocalDatetimeValue(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      }
 
-    function refreshButtonStates() {
-      const server = selectServer.value;
-      const inputValue = inputFuture.value;
-      let activeDate = null;
-      for (const btn of eventButtons) {
-        const eventKey = btn.dataset.event;
-        if (!EVENTS[eventKey] || !SERVERS[server]) {
-          btn.classList.remove('active');
-          continue;
+      function formatElapsed(minutes) {
+        const total = Math.round(minutes);
+        if (total < 1) return "less than a minute";
+        const days = Math.floor(total / 1440);
+        const hours = Math.floor((total % 1440) / 60);
+        const mins = total % 60;
+        const parts = [];
+        if (days) parts.push(`${days}d`);
+        if (hours) parts.push(`${hours}h`);
+        if (mins) parts.push(`${mins}m`);
+        return parts.join(" ");
+      }
+
+      function tzSuffix(offset) {
+        const sign = offset >= 0 ? "+" : "-";
+        return `${sign}${pad(Math.abs(offset))}:00`;
+      }
+
+      function addDays(yyyyMmDd, days) {
+        const [y, m, d] = yyyyMmDd.split("-").map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        dt.setUTCDate(dt.getUTCDate() + days);
+        return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+      }
+
+      function nextEventDate(eventKey, server, now = new Date()) {
+        const event = EVENTS[eventKey];
+        const offset = SERVERS[server].offset;
+        const tz = tzSuffix(offset);
+        const periodMs = VERSION_PERIOD_DAYS * 86400000;
+        let earliest = null;
+        for (const occ of event.occurrences) {
+          const firstYmd = addDays(VERSION_ANCHOR_DATE, occ.offsetDays);
+          const firstOcc = new Date(
+            `${firstYmd}T${pad(occ.hour)}:00:00${occ.utc ? "+00:00" : tz}`,
+          );
+          const diff = now.getTime() - firstOcc.getTime();
+          const cycles = diff < 0 ? 0 : Math.floor(diff / periodMs) + 1;
+          const candidate = new Date(firstOcc.getTime() + cycles * periodMs);
+          if (earliest === null || candidate < earliest) earliest = candidate;
         }
+        return earliest;
+      }
+
+      function formatEventHint(date, server) {
+        const offset = SERVERS[server].offset;
+        const serverDate = new Date(date.getTime() + offset * 3600000);
+        const ymd = `${serverDate.getUTCFullYear()}-${pad(serverDate.getUTCMonth() + 1)}-${pad(serverDate.getUTCDate())}`;
+        const hm = `${pad(serverDate.getUTCHours())}:${pad(serverDate.getUTCMinutes())}`;
+        return `${ymd} ${hm} ${SERVERS[server].label} (UTC${offset >= 0 ? "+" : ""}${offset})`;
+      }
+
+      function detectClosestServer() {
+        const browserOffsetHr = -new Date().getTimezoneOffset() / 60;
+        let closest = "asia",
+          minDiff = Infinity;
+        for (const [k, v] of Object.entries(SERVERS)) {
+          const d = Math.abs(v.offset - browserOffsetHr);
+          if (d < minDiff) {
+            minDiff = d;
+            closest = k;
+          }
+        }
+        return closest;
+      }
+
+      function getCookie(name) {
+        const m = document.cookie.match(
+          new RegExp("(?:^|; )" + name + "=([^;]*)"),
+        );
+        return m ? decodeURIComponent(m[1]) : null;
+      }
+
+      function setCookie(name, value) {
+        const exp = new Date(
+          Date.now() + 365 * 24 * 60 * 60 * 1000,
+        ).toUTCString();
+        document.cookie = `${name}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+      }
+
+      function refreshButtonStates() {
+        const server = selectServer.value;
+        const inputValue = inputFuture.value;
+        let activeDate = null;
+        for (const btn of eventButtons) {
+          const eventKey = btn.dataset.event;
+          if (!EVENTS[eventKey] || !SERVERS[server]) {
+            btn.classList.remove("active");
+            continue;
+          }
+          const date = nextEventDate(eventKey, server);
+          const matches =
+            inputValue && toLocalDatetimeValue(date) === inputValue;
+          btn.classList.toggle("active", matches);
+          if (matches) activeDate = date;
+        }
+        eventHint.textContent = activeDate
+          ? `Server time: ${formatEventHint(activeDate, server)}`
+          : "";
+      }
+
+      function applyEvent(eventKey) {
+        const server = selectServer.value;
+        if (!EVENTS[eventKey] || !SERVERS[server]) return;
         const date = nextEventDate(eventKey, server);
-        const matches = inputValue && toLocalDatetimeValue(date) === inputValue;
-        btn.classList.toggle('active', matches);
-        if (matches) activeDate = date;
-      }
-      eventHint.textContent = activeDate
-        ? `Server time: ${formatEventHint(activeDate, server)}`
-        : '';
-    }
-
-    function applyEvent(eventKey) {
-      const server = selectServer.value;
-      if (!EVENTS[eventKey] || !SERVERS[server]) return;
-      const date = nextEventDate(eventKey, server);
-      inputFuture.value = toLocalDatetimeValue(date);
-      setCookie(COOKIE_EVENT, eventKey);
-      refreshButtonStates();
-      calculate();
-    }
-
-    function clearResults(placeholder = '—') {
-      resResin.textContent = placeholder;
-      resCondensed.textContent = placeholder;
-      resWasted.textContent = placeholder;
-      resElapsed.textContent = placeholder;
-    }
-
-    function calculate() {
-      errorEl.hidden = true;
-
-      const currentRaw = inputCurrent.value;
-      const current = currentRaw === '' ? 0 : Number(currentRaw);
-      const startCondensedRaw = inputCurrentCondensed.value;
-      const startCondensed = startCondensedRaw === '' ? 0 : Number(startCondensedRaw);
-      const futureStr = inputFuture.value;
-
-      if (!Number.isFinite(current) || current < 0 || current > RESIN_CAP) {
-        errorEl.textContent = `Current resin must be between 0 and ${RESIN_CAP}.`;
-        errorEl.hidden = false;
-        clearResults();
-        return;
-      }
-
-      if (!Number.isFinite(startCondensed) || startCondensed < 0 || startCondensed > MAX_CONDENSED) {
-        errorEl.textContent = `Current condensed must be between 0 and ${MAX_CONDENSED}.`;
-        errorEl.hidden = false;
-        clearResults();
-        return;
-      }
-
-      if (!futureStr) {
-        clearResults();
-        return;
-      }
-
-      const future = new Date(futureStr);
-      if (Number.isNaN(future.getTime())) {
-        errorEl.textContent = 'Invalid date.';
-        errorEl.hidden = false;
-        clearResults();
-        return;
-      }
-
-      const now = new Date();
-      const diffMs = future.getTime() - now.getTime();
-
-      if (diffMs < 0) {
-        errorEl.textContent = 'That date is in the past.';
-        errorEl.hidden = false;
-        clearResults();
-        return;
-      }
-
-      const minutes = diffMs / 60000;
-      const regen = minutes / MIN_PER_RESIN;
-      const resinPool = current + regen;
-
-      const availableSlots = MAX_CONDENSED - startCondensed;
-      const newCondensed = Math.min(availableSlots, Math.floor(resinPool / RESIN_PER_CONDENSED));
-      const leftoverResin = resinPool - newCondensed * RESIN_PER_CONDENSED;
-      const condensed = startCondensed + newCondensed;
-      const resin = Math.min(RESIN_CAP, Math.floor(leftoverResin));
-      const wasted = Math.max(0, Math.floor(leftoverResin - RESIN_CAP));
-
-      resCondensed.textContent = `${condensed} / ${MAX_CONDENSED}`;
-      resResin.textContent = `${resin} / ${RESIN_CAP}`;
-      resWasted.textContent = String(wasted);
-      resElapsed.textContent = formatElapsed(minutes);
-    }
-
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz) tzHint.textContent = `Browser timezone: ${tz}`;
-    } catch (_) { /* ignore */ }
-
-    const savedServer = getCookie(COOKIE_SERVER);
-    const savedEvent = getCookie(COOKIE_EVENT);
-    selectServer.value = SERVERS[savedServer] ? savedServer : detectClosestServer();
-
-    if (EVENTS[savedEvent]) {
-      const date = nextEventDate(savedEvent, selectServer.value);
-      inputFuture.value = toLocalDatetimeValue(date);
-    } else {
-      inputFuture.value = toLocalDatetimeValue(new Date(Date.now() + 24 * 60 * 60 * 1000));
-    }
-    refreshButtonStates();
-
-    selectServer.addEventListener('change', () => {
-      setCookie(COOKIE_SERVER, selectServer.value);
-      // If a preset is currently active, recompute its date for the new server.
-      const active = eventButtons.find(b => b.classList.contains('active'));
-      if (active) {
-        applyEvent(active.dataset.event);
-      } else {
-        refreshButtonStates();
-      }
-    });
-
-    for (const btn of eventButtons) {
-      btn.addEventListener('click', () => applyEvent(btn.dataset.event));
-    }
-
-    for (const el of [inputCurrent, inputCurrentCondensed]) {
-      el.addEventListener('focus', () => el.select());
-    }
-
-    inputCurrent.addEventListener('input', calculate);
-    inputCurrentCondensed.addEventListener('input', calculate);
-    inputFuture.addEventListener('input', () => {
-      // User edited the date manually. Drop the saved preset so reloads honor the custom date.
-      setCookie(COOKIE_EVENT, '');
-      refreshButtonStates();
-      calculate();
-    });
-
-    // Keep the page live: re-evaluate "next" event timestamps every minute.
-    setInterval(() => {
-      const active = eventButtons.find(b => b.classList.contains('active'));
-      if (active) {
-        const date = nextEventDate(active.dataset.event, selectServer.value);
         inputFuture.value = toLocalDatetimeValue(date);
+        setCookie(COOKIE_EVENT, eventKey);
+        refreshButtonStates();
+        calculate();
+      }
+
+      function clearResults(placeholder = "—") {
+        resResin.textContent = placeholder;
+        resCondensed.textContent = placeholder;
+        resWasted.textContent = placeholder;
+        resElapsed.textContent = placeholder;
+        resHoardRealm.textContent = placeholder;
+        resHoardIt.textContent = placeholder;
+      }
+
+      function calculate() {
+        errorEl.hidden = true;
+
+        const currentRaw = inputCurrent.value;
+        const current = currentRaw === "" ? 0 : Number(currentRaw);
+        const startCondensedRaw = inputCurrentCondensed.value;
+        const startCondensed =
+          startCondensedRaw === "" ? 0 : Number(startCondensedRaw);
+        const futureStr = inputFuture.value;
+
+        if (!Number.isFinite(current) || current < 0 || current > RESIN_CAP) {
+          errorEl.textContent = `Current resin must be between 0 and ${RESIN_CAP}.`;
+          errorEl.hidden = false;
+          clearResults();
+          return;
+        }
+
+        if (
+          !Number.isFinite(startCondensed) ||
+          startCondensed < 0 ||
+          startCondensed > MAX_CONDENSED
+        ) {
+          errorEl.textContent = `Current condensed must be between 0 and ${MAX_CONDENSED}.`;
+          errorEl.hidden = false;
+          clearResults();
+          return;
+        }
+
+        if (!futureStr) {
+          clearResults();
+          return;
+        }
+
+        const future = new Date(futureStr);
+        if (Number.isNaN(future.getTime())) {
+          errorEl.textContent = "Invalid date.";
+          errorEl.hidden = false;
+          clearResults();
+          return;
+        }
+
+        const now = new Date();
+        const diffMs = future.getTime() - now.getTime();
+
+        if (diffMs < 0) {
+          errorEl.textContent = "That date is in the past.";
+          errorEl.hidden = false;
+          clearResults();
+          return;
+        }
+
+        const minutes = diffMs / 60000;
+        const regen = minutes / MIN_PER_RESIN;
+        const resinPool = current + regen;
+
+        const availableSlots = MAX_CONDENSED - startCondensed;
+        const newCondensed = Math.min(
+          availableSlots,
+          Math.floor(resinPool / RESIN_PER_CONDENSED),
+        );
+        const leftoverResin = resinPool - newCondensed * RESIN_PER_CONDENSED;
+        const condensed = startCondensed + newCondensed;
+        const resin = Math.min(RESIN_CAP, Math.floor(leftoverResin));
+        const wasted = Math.max(0, Math.floor(leftoverResin - RESIN_CAP));
+
+        resCondensed.textContent = `${condensed} / ${MAX_CONDENSED}`;
+        resResin.textContent = `${resin} / ${RESIN_CAP}`;
+        resWasted.textContent = String(wasted);
+        resElapsed.textContent = formatElapsed(minutes);
+
+        const realmHoardFrom = transientHoardFrom(future, 14);
+        const itHoardFrom = transientHoardFrom(future, 7);
+        const realmWeeks =
+          Math.floor(
+            (future.getTime() - realmHoardFrom.getTime()) / (7 * 86400000),
+          ) + 1;
+        resHoardRealm.textContent = `${formatHoardDate(realmHoardFrom)} (up to ${realmWeeks})`;
+        resHoardIt.textContent = formatHoardDate(itHoardFrom);
+      }
+
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz) tzHint.textContent = `Browser timezone: ${tz}`;
+      } catch (_) {
+        /* ignore */
+      }
+
+      const savedServer = getCookie(COOKIE_SERVER);
+      const savedEvent = getCookie(COOKIE_EVENT);
+      selectServer.value = SERVERS[savedServer]
+        ? savedServer
+        : detectClosestServer();
+
+      if (EVENTS[savedEvent]) {
+        const date = nextEventDate(savedEvent, selectServer.value);
+        inputFuture.value = toLocalDatetimeValue(date);
+      } else {
+        inputFuture.value = toLocalDatetimeValue(
+          new Date(Date.now() + 24 * 60 * 60 * 1000),
+        );
       }
       refreshButtonStates();
-      calculate();
-    }, 60000);
 
-    calculate();
-  </script>
-</body>
+      selectServer.addEventListener("change", () => {
+        setCookie(COOKIE_SERVER, selectServer.value);
+        // If a preset is currently active, recompute its date for the new server.
+        const active = eventButtons.find((b) => b.classList.contains("active"));
+        if (active) {
+          applyEvent(active.dataset.event);
+        } else {
+          refreshButtonStates();
+        }
+      });
+
+      for (const btn of eventButtons) {
+        btn.addEventListener("click", () => applyEvent(btn.dataset.event));
+      }
+
+      for (const el of [inputCurrent, inputCurrentCondensed]) {
+        el.addEventListener("focus", () => el.select());
+      }
+
+      inputCurrent.addEventListener("input", calculate);
+      inputCurrentCondensed.addEventListener("input", calculate);
+      inputFuture.addEventListener("input", () => {
+        // User edited the date manually. Drop the saved preset so reloads honor the custom date.
+        setCookie(COOKIE_EVENT, "");
+        refreshButtonStates();
+        calculate();
+      });
+
+      // Keep the page live: re-evaluate "next" event timestamps every minute.
+      setInterval(() => {
+        const active = eventButtons.find((b) => b.classList.contains("active"));
+        if (active) {
+          const date = nextEventDate(active.dataset.event, selectServer.value);
+          inputFuture.value = toLocalDatetimeValue(date);
+        }
+        refreshButtonStates();
+        calculate();
+      }, 60000);
+
+      calculate();
+    </script>
+  </body>
 </html>
