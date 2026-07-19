@@ -255,7 +255,7 @@
       }
       .result-value {
         font-size: 1.25rem;
-        font-weight: 600;
+        font-weight: 400;
         color: var(--accent-bright);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
@@ -266,20 +266,6 @@
         color: var(--muted);
         font-weight: 400;
         font-size: 1rem;
-      }
-      .result-block {
-        border-bottom: 1px solid var(--border);
-        padding: 0.6rem 0 0.4rem;
-      }
-      .result-block:last-child {
-        border-bottom: none;
-      }
-      .result-block .result-row {
-        border-bottom: none;
-        padding: 0;
-      }
-      .result-block .hint {
-        margin-top: 0.1rem;
       }
       .error {
         color: var(--danger);
@@ -293,6 +279,53 @@
         color: var(--muted);
         margin: 0 0 0.75rem;
         font-weight: 500;
+      }
+      .tr-intro {
+        margin: 0 0 1rem;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      .tr-source {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .tr-source:last-of-type {
+        border-bottom: none;
+      }
+      .tr-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+      .tr-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--accent-bright);
+      }
+      .tr-meta {
+        font-size: 0.7rem;
+        color: var(--muted);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .tr-sub {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .tr-action {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.65rem;
+        background: var(--bg);
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        color: var(--accent-bright);
+        font-size: 0.9rem;
+        font-weight: 400;
+        line-height: 1.35;
+        font-variant-numeric: tabular-nums;
       }
     </style>
   </head>
@@ -312,8 +345,8 @@
           <ul>
             <li>Condensed resin — when to stop spending and start crafting</li>
             <li>
-              Transient Resin — when to save from Realm Depot and Imaginarium
-              Theater
+              Transient Resin — which sources to grab, and when, to bank extra
+              resin for your target
             </li>
           </ul>
         </dd>
@@ -408,24 +441,17 @@
           <span class="result-label">Time from now</span>
           <span class="result-value muted" id="result-elapsed">—</span>
         </div>
-        <div class="result-block">
-          <div class="result-row">
-            <span class="result-label"
-              >Realm Depot: Save Transient Resin from</span
-            >
-            <span class="result-value muted" id="result-hoard-realm">—</span>
-          </div>
-          <div class="hint">Lasts for 2 weeks from this week's Monday</div>
-        </div>
-        <div class="result-block">
-          <div class="result-row">
-            <span class="result-label"
-              >Imaginarium Theater: Claim Transient Resin from</span
-            >
-            <span class="result-value muted" id="result-hoard-it">—</span>
-          </div>
-          <div class="hint">Lasts for 1 week from this week's Monday</div>
-        </div>
+      </div>
+
+      <div class="card" aria-live="polite" aria-atomic="true">
+        <h2 class="section-title">Sources of Transient Resin</h2>
+        <p class="tr-intro">
+          Transient Resin is stored as an item — it doesn't count against your
+          200 cap until used, so each one banks +60 resin on top of your
+          stockpile. It expires, so grab it late enough that it's still valid by
+          your target date.
+        </p>
+        <div id="tr-sources"></div>
       </div>
 
       <footer>
@@ -472,6 +498,56 @@
         },
       };
 
+      // Recurring ways to obtain Transient Resin (each restores 60 resin on use).
+      // expiryDays: how long a copy stays valid, measured from this week's Monday.
+      // maxAtOnce: most copies that can be valid simultaneously at the target.
+      const TRANSIENT_RESIN = 60;
+      const MONTHS = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const TRANSIENT_SOURCES = [
+        {
+          key: "realm",
+          name: "Realm Depot",
+          sub: "Serenitea Pot · Trust Rank 6 · 1,200 Realm Currency each",
+          meta: "+60 · 1/week · 2wk",
+          verb: "Buy",
+          expiryDays: 14,
+          maxAtOnce: 2,
+        },
+        {
+          key: "it",
+          name: "Imaginarium Theater",
+          sub: "Season reward · one per season",
+          meta: "+60 · 1/season · 1wk",
+          verb: "Claim",
+          expiryDays: 7,
+          maxAtOnce: 1,
+          single: true,
+        },
+        {
+          key: "event",
+          name: "Constellation Selector Event",
+          sub: '"To Temper Thyself and Journey Far" — 1 per week, only while the event runs',
+          meta: "+60 · 1/week · 1wk",
+          verb: "Grab",
+          expiryDays: 7,
+          maxAtOnce: 1,
+          eventOnly: true,
+        },
+      ];
+
       const COOKIE_SERVER = "gscServer";
       const COOKIE_EVENT = "gscEvent";
 
@@ -487,8 +563,7 @@
       const resCondensed = document.getElementById("result-condensed");
       const resWasted = document.getElementById("result-wasted");
       const resElapsed = document.getElementById("result-elapsed");
-      const resHoardRealm = document.getElementById("result-hoard-realm");
-      const resHoardIt = document.getElementById("result-hoard-it");
+      const trSources = document.getElementById("tr-sources");
       const eventButtons = Array.from(
         document.querySelectorAll(".event-button"),
       );
@@ -514,7 +589,81 @@
         const now = new Date();
         now.setHours(0, 0, 0, 0);
         if (monday <= now) return "Now";
-        return `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+        return `${pad(monday.getDate())} ${MONTHS[monday.getMonth()]}`;
+      }
+
+      // Monday (local, midnight) of the week containing `date`.
+      function mondayOfWeek(date) {
+        const d = new Date(date.getTime());
+        d.setHours(0, 0, 0, 0);
+        const day = d.getDay(); // 0=Sun … 6=Sat
+        const back = day === 0 ? 6 : day - 1;
+        d.setDate(d.getDate() - back);
+        return d;
+      }
+
+      // For a source and target, work out the earliest week to start grabbing so
+      // copies stay valid at the target, and how many can be banked by then.
+      function transientPlan(source, target, now = new Date()) {
+        const weekMs = 7 * 86400000;
+        const grabFrom = transientHoardFrom(target, source.expiryDays);
+        const thisMonday = mondayOfWeek(now);
+        // Can't buy in the past, so start no earlier than this week.
+        const start = grabFrom > thisMonday ? grabFrom : thisMonday;
+        const opportunities =
+          Math.floor((target.getTime() - start.getTime()) / weekMs) + 1;
+        let count = Math.min(source.maxAtOnce, Math.max(0, opportunities));
+        if (source.single) count = Math.min(count, 1);
+        return { grabFrom, count, resin: count * TRANSIENT_RESIN };
+      }
+
+      function transientActionText(source, plan) {
+        if (plan.count <= 0) return "No copies stay valid until then.";
+        const when = formatHoardDate(plan.grabFrom);
+        const now = when === "Now";
+        const gain = `+${plan.resin} by then`;
+        let line;
+        if (plan.count === 1) {
+          line = now
+            ? `${source.verb} this week → ${gain}`
+            : `${source.verb} the week of ${when} → ${gain}`;
+        } else {
+          line = now
+            ? `${source.verb} this week, then one per week (up to ${plan.count}) → ${gain}`
+            : `${source.verb} weekly from the week of ${when} (up to ${plan.count}) → ${gain}`;
+        }
+        return source.eventOnly ? `While the event runs: ${line}` : line;
+      }
+
+      function renderTransientSources(target) {
+        trSources.innerHTML = "";
+        for (const source of TRANSIENT_SOURCES) {
+          const plan = transientPlan(source, target);
+
+          const card = document.createElement("div");
+          card.className = "tr-source";
+
+          const head = document.createElement("div");
+          head.className = "tr-head";
+          const name = document.createElement("span");
+          name.className = "tr-name";
+          name.textContent = source.name;
+          const meta = document.createElement("span");
+          meta.className = "tr-meta";
+          meta.textContent = source.meta;
+          head.append(name, meta);
+
+          const sub = document.createElement("div");
+          sub.className = "tr-sub";
+          sub.textContent = source.sub;
+
+          const action = document.createElement("div");
+          action.className = "tr-action";
+          action.textContent = transientActionText(source, plan);
+
+          card.append(head, sub, action);
+          trSources.appendChild(card);
+        }
       }
 
       function toLocalDatetimeValue(date) {
@@ -568,7 +717,7 @@
       function formatEventHint(date, server) {
         const offset = SERVERS[server].offset;
         const serverDate = new Date(date.getTime() + offset * 3600000);
-        const ymd = `${serverDate.getUTCFullYear()}-${pad(serverDate.getUTCMonth() + 1)}-${pad(serverDate.getUTCDate())}`;
+        const ymd = `${pad(serverDate.getUTCDate())} ${MONTHS[serverDate.getUTCMonth()]}`;
         const hm = `${pad(serverDate.getUTCHours())}:${pad(serverDate.getUTCMinutes())}`;
         return `${ymd} ${hm} ${SERVERS[server].label} (UTC${offset >= 0 ? "+" : ""}${offset})`;
       }
@@ -637,8 +786,7 @@
         resCondensed.textContent = placeholder;
         resWasted.textContent = placeholder;
         resElapsed.textContent = placeholder;
-        resHoardRealm.textContent = placeholder;
-        resHoardIt.textContent = placeholder;
+        trSources.innerHTML = "";
       }
 
       function calculate() {
@@ -711,14 +859,7 @@
         resWasted.textContent = String(wasted);
         resElapsed.textContent = formatElapsed(minutes);
 
-        const realmHoardFrom = transientHoardFrom(future, 14);
-        const itHoardFrom = transientHoardFrom(future, 7);
-        const realmWeeks =
-          Math.floor(
-            (future.getTime() - realmHoardFrom.getTime()) / (7 * 86400000),
-          ) + 1;
-        resHoardRealm.textContent = `${formatHoardDate(realmHoardFrom)} (up to ${realmWeeks})`;
-        resHoardIt.textContent = formatHoardDate(itHoardFrom);
+        renderTransientSources(future);
       }
 
       try {
